@@ -1,27 +1,44 @@
+// ============================================================
+// TELA: EDITAR (entrada e saída de produtos do almoxarifado)
+// Permite registrar a entrada ou saída de um produto, enviando
+// os dados (e opcionalmente uma imagem) para o backend Flask.
+// ============================================================
+
+// Componentes básicos do React Native
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, FlatList, Modal, Alert, ScrollView} from 'react-native';
+// Fontes personalizadas (Poppins para títulos, Montserrat para textos)
 import { useFonts, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
+// Ícones (menu, fechar, logout, imagem)
 import { MaterialIcons } from '@expo/vector-icons';
+// Hooks do React: useState guarda valores que mudam, useCallback memoriza funções
 import { useState, useCallback } from 'react';
+// Armazenamento local do celular (guarda nome e tipo do usuário logado)
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// Classe File do Expo, usada para anexar a imagem no envio
 import { File } from 'expo-file-system';
+// router navega entre telas; useFocusEffect roda código quando a tela ganha foco
 import { router, useFocusEffect } from 'expo-router';
+// Biblioteca para escolher imagens da galeria
 import * as ImagePicker from 'expo-image-picker';
 
 export default function Editar() {
 
+  // Carrega as fontes. Enquanto não carregam, fontsLoaded fica false
   const [fontsLoaded] = useFonts({
       Poppins_700Bold,
       Montserrat_400Regular,
       Montserrat_700Bold
   });
 
+  // Controla se a barra lateral (sidebar) está aberta (true) ou fechada (false)
   const [menuAberto, setMenuAberto] = useState(false);
 
-  // Tipo da operação
+  // Tipo da operação: 'entrada' ou 'saida'
   const [tipo, setTipo] = useState('entrada');
 
-  // Campos do produto
+  // ---------- Campos do formulário do produto ----------
+  // Cada campo tem um estado: o valor atual e a função que o altera
   const [nome, setNome] = useState('');
   const [responsavel, setResponsavel] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -29,33 +46,39 @@ export default function Editar() {
   const [preco, setPreco] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [estoqueMin, setEstoqueMin] = useState('');
-  const [imagem, setImagem] = useState(null);
+  const [imagem, setImagem] = useState(null); // imagem escolhida (null = nenhuma)
 
-  // Controla o tipo do usuário
+  // ---------- Dados do usuário logado ----------
   const [nomeUsuario, setNomeUsuario] = useState('');
-  const [tipoUsuario, setTipoUsuario] = useState('');
+  const [tipoUsuario, setTipoUsuario] = useState(''); // 'admin' ou usuário comum
   
+    // Toda vez que a tela ganha foco, busca os dados do usuário salvos no celular.
+    // useCallback evita recriar a função a cada renderização.
     useFocusEffect(
       useCallback(() => {
         const carregarUsuario = async () => {
+          // Lê os valores gravados no login
           const nome = await AsyncStorage.getItem('nomeUsuario');
           const tipo = await AsyncStorage.getItem('tipoUsuario');
   
+          // Se não existir nada salvo, usa string vazia ('' é o valor padrão)
           setNomeUsuario(nome || '');
           setTipoUsuario(tipo || '');
         };
   
         carregarUsuario();
-      }, [])
+      }, []) // [] = a função só é criada uma vez
     );
 
-  // Controle de envio
+  // Indica se o envio está em andamento (desabilita o botão e muda o texto)
   const [carregando, setCarregando] = useState(false);
 
-  // Permissão para acessar galeria de imagem
+  // ---------- Escolher imagem da galeria ----------
+  // Pede permissão de acesso às fotos e abre a galeria
   const escolherImagem = async () => {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
+  // Se o usuário negou a permissão, avisa e interrompe a função (return)
   if (!permissao.granted) {
     Alert.alert(
       'Permissão necessária',
@@ -64,21 +87,25 @@ export default function Editar() {
     return;
   }
 
+  // Abre a galeria: só imagens, com edição (corte) e qualidade 80%
   const resultado = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
     quality: 0.8,
   });
 
+  // Se o usuário não cancelou, guarda a primeira imagem escolhida
   if (!resultado.canceled) {
     setImagem(resultado.assets[0]);
   }
 };
 
-  // CONFIRMAR OPERAÇÃO
-
+  // ---------- CONFIRMAR OPERAÇÃO ----------
+  // Valida os campos e envia os dados para o servidor
   const confirmarOperacao = async () => {
 
+    // Campos obrigatórios: nome, quantidade e responsável.
+    // "!nome" é true quando a string está vazia
     if (!nome || !quantidade || !responsavel) {
       Alert.alert(
         'Atenção',
@@ -87,8 +114,10 @@ export default function Editar() {
       return;
     }
 
+    // Converte a quantidade (texto) para número inteiro e valida
     const quantidadeNumero = parseInt(quantidade);
 
+    // isNaN = "não é um número"; também bloqueia zero e negativos
     if (isNaN(quantidadeNumero) || quantidadeNumero <= 0) {
       Alert.alert(
         'Atenção',
@@ -97,6 +126,8 @@ export default function Editar() {
       return;
     }
 
+    // Converte o preço para decimal. replace troca vírgula por ponto
+    // (parseFloat só entende ponto). Se o campo estiver vazio, usa 0
      const precoNumero = preco ? parseFloat(preco.replace(',', '.')) : 0;
 
     if (isNaN(precoNumero) || precoNumero < 0) {
@@ -107,27 +138,35 @@ export default function Editar() {
       return;
     }
 
+      // Ativa o estado de carregamento (bloqueia cliques repetidos)
       setCarregando(true);
 
+      // try/catch/finally: tenta executar, trata erros e sempre limpa no final
       try {
 
+        // FormData permite enviar texto e arquivo juntos (multipart/form-data)
         const formulario = new FormData();
 
+        // O primeiro valor é o nome do campo e deve bater com o que o Flask espera
         formulario.append('nome', nome);
         formulario.append('categoria', categoria);
         formulario.append('qtde', quantidade);
         formulario.append('responsavel', responsavel);
-        formulario.append('estoque_min', estoqueMin || '0');
+        formulario.append('estoque_min', estoqueMin || '0'); // se vazio, envia '0'
         formulario.append('preco', String(precoNumero));
         formulario.append('descricao', descricao);
         formulario.append('tipo', tipo);
 
+        // Só anexa a imagem se o usuário escolheu uma
+        // (?. evita erro caso imagem seja null)
         if (imagem?.uri) {
           const arquivo = new File(imagem.uri);
 
           formulario.append('imagem', arquivo);
         }
 
+        // Envia para o backend. O IP precisa ser o do computador que roda o Flask,
+        // e o celular precisa estar na mesma rede Wi-Fi
         const resposta = await fetch(
           'http://10.154.20.25:5000/entrada_app',
           {
@@ -136,11 +175,15 @@ export default function Editar() {
           }
         );
 
+        // Lê a resposta do servidor em JSON
         const dados = await resposta.json();
 
+        // Logs para depuração (aparecem no terminal do Expo)
         console.log('STATUS:', resposta.status);
         console.log('RESPOSTA:', dados);
 
+        // resposta.ok é false quando o status não é 200-299.
+        // Mostra o erro enviado pelo servidor, ou uma mensagem padrão
         if (!resposta.ok) {
           Alert.alert(
             'Erro',
@@ -149,6 +192,7 @@ export default function Editar() {
           return;
         }
 
+        // Mensagem de sucesso conforme o tipo da operação (operador ternário)
         Alert.alert(
           'Sucesso',
           tipo === 'entrada'
@@ -156,7 +200,7 @@ export default function Editar() {
             : 'Saída realizada com sucesso!'
         );
 
-        // Limpa os campos
+        // Limpa os campos do formulário
         setNome('');
         setResponsavel('');
         setDescricao('');
@@ -166,11 +210,12 @@ export default function Editar() {
         setEstoqueMin('');
         setImagem(null);
 
-        // Vai para a tabela
+        // Vai para a tela da tabela de estoque (replace não deixa voltar para cá)
         router.replace('/tabela');
 
       } catch (erro) {
 
+        // Cai aqui em erro de rede (servidor desligado, IP errado, sem Wi-Fi etc.)
         console.log('ERRO:', erro);
 
         Alert.alert(
@@ -180,18 +225,23 @@ export default function Editar() {
 
       } finally {
 
+        // O finally roda sempre, dando certo ou errado: desliga o carregamento
         setCarregando(false);
 
       }
 };
 
+  // ============================================================
+  // INTERFACE (JSX): o que aparece na tela
+  // ============================================================
   return (
     <View style={styles.container}>
 
-      {/* NAVBAR */}
+      {/* NAVBAR: barra azul superior com menu e links */}
 
       <View style={styles.navbar}>
 
+        {/* Botão hambúrguer: inverte o valor de menuAberto (abre/fecha a sidebar) */}
         <TouchableOpacity
           style={styles.menuButton}
           onPress={() => setMenuAberto(!menuAberto)}
@@ -203,6 +253,8 @@ export default function Editar() {
           />
         </TouchableOpacity>
 
+        {/* Links de navegação visíveis para todos.
+            router.push empilha a tela (dá para voltar) */}
         <TouchableOpacity
           onPress={() => router.push('/tabela')}
         >
@@ -219,6 +271,8 @@ export default function Editar() {
           </Text>
         </TouchableOpacity>
 
+        {/* Renderização condicional: só mostra se o usuário for admin.
+            O <> </> (Fragment) agrupa elementos sem criar uma View extra */}
         {tipoUsuario === 'admin' && (
           <>
             <TouchableOpacity
@@ -240,12 +294,13 @@ export default function Editar() {
         )}
       </View>
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR: menu lateral com dados do usuário (só aparece se menuAberto for true) */}
 
       {menuAberto && (
 
         <View style={styles.sidebar}>
 
+          {/* Botão X para fechar a sidebar */}
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setMenuAberto(false)}
@@ -257,12 +312,14 @@ export default function Editar() {
             />
           </TouchableOpacity>
 
+          {/* Informações do usuário logado */}
           <Text style={styles.sidebarTitulo}>USUÁRIO</Text>
           <Text style={styles.usuario}>{nomeUsuario}</Text>
           <Text style={styles.tipo}>
             {tipoUsuario === 'admin' ? 'Administrador' : 'Usuário'}
           </Text>
 
+          {/* Botão de logout: replace troca a tela e impede voltar com o botão "voltar" */}
           <TouchableOpacity
             style={styles.logout}
             onPress={() => router.replace('/login')}
@@ -284,20 +341,22 @@ export default function Editar() {
 
       )}
 
-      {/* CONTEÚDO */}
+      {/* CONTEÚDO: área rolável com o formulário */}
 
       <ScrollView
         contentContainerStyle={styles.conteudo}
         showsVerticalScrollIndicator={false}
       >
 
-        {/* TÍTULO */}
+        {/* TÍTULO da página (\n quebra a linha) */}
 
         <Text style={styles.titulo}>
           {'Boas-vindas ao\nEditar almoxarifado!'}
         </Text>
 
-        {/* ENTRADA / SAÍDA */}
+        {/* BOTÕES ENTRADA / SAÍDA.
+            O estilo é um array: aplica botaoTipo sempre e botaoSelecionado
+            só quando o tipo atual for igual ao do botão */}
 
         <View style={styles.botoesTipo}>
           <TouchableOpacity
@@ -330,16 +389,18 @@ export default function Editar() {
 
         </View>
 
-        {/* CARD */}
+        {/* CARD: caixa branca com borda laranja que contém o formulário */}
         <View style={styles.card}>
 
+          {/* Título do card muda conforme o tipo da operação */}
           <Text style={styles.produtosTitulo}>
             {tipo === 'entrada'
               ? 'ENTRADA DE PRODUTO'
               : 'SAÍDA DE PRODUTO'}
           </Text>
 
-          {/* NOME */}
+          {/* NOME (obrigatório).
+              value mostra o estado; onChangeText atualiza o estado a cada letra digitada */}
           <Text style={styles.label}>
             NOME
           </Text>
@@ -352,7 +413,7 @@ export default function Editar() {
             onChangeText={setNome}
           />
 
-          {/* RESPONSÁVEL */}
+          {/* RESPONSÁVEL (obrigatório) */}
           <Text style={styles.label}>
             RESPONSÁVEL
           </Text>
@@ -378,7 +439,7 @@ export default function Editar() {
             onChangeText={setCategoria}
           />
 
-            {/* PREÇO */}
+            {/* PREÇO (teclado decimal; aceita vírgula ou ponto) */}
             <Text style={styles.label}>
               PREÇO
             </Text>
@@ -392,7 +453,7 @@ export default function Editar() {
               keyboardType="decimal-pad"
             />
                 
-          {/* QUANTIDADE */}
+          {/* QUANTIDADE (obrigatória, teclado numérico) */}
           <Text style={styles.label}>
             QUANTIDADE
           </Text>
@@ -406,7 +467,7 @@ export default function Editar() {
             keyboardType="numeric"
           />
 
-          {/* ESTOQUE MÍNIMO */}
+          {/* ESTOQUE MÍNIMO (se vazio, é enviado como 0) */}
           <Text style={styles.label}>
             ESTOQUE MÍNIMO
           </Text>
@@ -420,7 +481,7 @@ export default function Editar() {
             keyboardType="numeric"
           />
 
-          {/* DESCRIÇÃO */}
+          {/* DESCRIÇÃO (campo maior; multiline permite várias linhas) */}
           <Text style={styles.label}>
             DESCRIÇÃO
           </Text>
@@ -437,7 +498,7 @@ export default function Editar() {
             multiline
           />
 
-          {/* IMAGEM */}
+          {/* IMAGEM: botão que chama escolherImagem para abrir a galeria */}
           <Text style={styles.label}>
             IMAGEM
           </Text>
@@ -452,11 +513,13 @@ export default function Editar() {
               color="#FFFFFF"
             />
 
+            {/* O texto muda se já houver uma imagem escolhida */}
             <Text style={styles.textoImagem}>
               {imagem ? 'ALTERAR IMAGEM' : 'ADICIONAR IMAGEM'}
             </Text>
           </TouchableOpacity>
 
+          {/* Pré-visualização: só aparece se existir uma imagem escolhida */}
           {imagem && (
             <Image
               source={{ uri: imagem.uri }}
@@ -465,7 +528,8 @@ export default function Editar() {
             />
           )}
 
-          {/* CONFIRMAR */}
+          {/* BOTÃO CONFIRMAR: chama confirmarOperacao.
+              Enquanto carregando for true, fica desabilitado e com opacidade menor */}
           <TouchableOpacity
             style={[
               styles.botaoConfirmar,
@@ -492,12 +556,19 @@ export default function Editar() {
 }
 
 
+// ============================================================
+// ESTILOS
+// StyleSheet.create organiza os estilos em um objeto.
+// Cores principais: azul #1D3273 e laranja #F28705
+// ============================================================
 const styles = StyleSheet.create({
+  // Container principal: flex 1 ocupa a tela toda, com fundo cinza claro
   container: {
     flex: 1,
     backgroundColor: '#F0F1F2',
   },
 
+  // Barra de navegação superior (flexDirection 'row' deixa os itens lado a lado)
   navbar: {
     height: 60,
     backgroundColor: '#1D3273',
@@ -510,10 +581,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
+  // Botão hambúrguer do menu
   menuButton: {
     marginRight: 10,
   },
 
+  // Links da navbar (ESTOQUE, EDITAR, CONTAS, CADASTRO)
   link: {
     color: '#FFFFFF',
     fontSize: 14,
@@ -521,6 +594,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
   },
 
+  // Menu lateral: position 'absolute' o coloca sobre a tela,
+  // e zIndex alto o deixa na frente dos outros elementos
   sidebar: {
     position: 'absolute',
     left: 0,
@@ -533,6 +608,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
+  // Botão X no canto superior direito da sidebar
   closeButton: {
     position: 'absolute',
     right: 10,
@@ -543,6 +619,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // Título "USUÁRIO" da sidebar
   sidebarTitulo: {
     color: '#FFFFFF',
     fontSize: 22,
@@ -550,6 +627,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  // Nome do usuário na sidebar
   usuario: {
     color: '#FFFFFF',
     fontSize: 18,
@@ -557,6 +635,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 
+  // Estilo extra para o tipo de usuário (não está sendo usado no JSX)
   tipoUsuario: {
     color: '#FFFFFF',
     fontSize: 14,
@@ -564,6 +643,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  // Texto "Administrador" / "Usuário" na sidebar
   tipo: {
     color: '#FFFFFF',
     fontSize: 14,
@@ -571,10 +651,11 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  // Botão de logout com linha separadora no topo (borderTop)
   logout: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 10, // espaço entre o ícone e o texto
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.3)',
@@ -586,10 +667,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
   },
 
+  // Espaço extra no fim da área rolável
   conteudo: {
     paddingBottom: 40,
   },
 
+  // Título principal da página
   titulo: {
     fontSize: 25,
     textAlign: 'center',
@@ -598,6 +681,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
   },
 
+  // Linha que contém os botões ENTRADA e SAÍDA (centralizados, lado a lado)
   botoesTipo: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -605,6 +689,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  // Botão ENTRADA/SAÍDA no estado normal (azul mais claro)
   botaoTipo: {
     minWidth: 110,
     height: 42,
@@ -619,6 +704,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 
+  // Estado selecionado: azul escuro com borda laranja (sobrescreve o botaoTipo)
   botaoSelecionado: {
     backgroundColor: '#1D3273',
     borderColor: '#F28705',
@@ -631,6 +717,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  // Card branco do formulário com borda laranja
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
@@ -640,6 +727,7 @@ const styles = StyleSheet.create({
     borderColor: '#F28705',
   },
 
+  // Título dentro do card
   produtosTitulo: {
     color: '#1D3273',
     fontSize: 18,
@@ -648,6 +736,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // Rótulo acima de cada campo
   label: {
     color: '#1D3273',
     fontWeight: 'bold',
@@ -655,6 +744,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
+  // Estilo padrão dos campos de texto
   campo: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
@@ -665,12 +755,14 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
 
+  // Campo de descrição: mais alto e com texto alinhado ao topo
   campoDescricao: {
     height: 80,
     textAlignVertical: 'top',
     paddingTop: 10,
   },
 
+  // Botão de adicionar/alterar imagem
   botaoImagem: {
     height: 45,
     backgroundColor: '#1D3273',
@@ -688,6 +780,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  // Pré-visualização da imagem escolhida
   previewImagem: {
     width: '100%',
     height: 180,
@@ -697,6 +790,7 @@ const styles = StyleSheet.create({
     borderColor: '#4A64A3',
   },
 
+  // Botão CONFIRMAR
   botaoConfirmar: {
     height: 45,
     backgroundColor: '#1D3273',
@@ -708,6 +802,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
+  // Aparência do botão enquanto está enviando (mais transparente)
   botaoDesabilitado: {
     opacity: 0.6,
   },
@@ -719,4 +814,3 @@ const styles = StyleSheet.create({
   },
 
 });
-
