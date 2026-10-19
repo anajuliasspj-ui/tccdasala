@@ -1,8 +1,8 @@
-// ============================================================
+// ===============================================
 // TELA: EDITAR (entrada e saída de produtos do almoxarifado)
 // Permite registrar a entrada ou saída de um produto, enviando
 // os dados (e opcionalmente uma imagem) para o backend Flask.
-// ============================================================
+// ===============================================
 
 // Componentes básicos do React Native
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, FlatList, Modal, Alert, ScrollView} from 'react-native';
@@ -231,9 +231,9 @@ export default function Editar() {
       }
 };
 
-  // ============================================================
+  // ===============================================
   // INTERFACE (JSX): o que aparece na tela
-  // ============================================================
+  // ===============================================
   return (
     <View style={styles.container}>
 
@@ -556,11 +556,11 @@ export default function Editar() {
 }
 
 
-// ============================================================
+// ===============================================
 // ESTILOS
 // StyleSheet.create organiza os estilos em um objeto.
 // Cores principais: azul #1D3273 e laranja #F28705
-// ============================================================
+// ===============================================
 const styles = StyleSheet.create({
   // Container principal: flex 1 ocupa a tela toda, com fundo cinza claro
   container: {
