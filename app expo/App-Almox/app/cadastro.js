@@ -1,7 +1,7 @@
-// ============================================================
+// ===============================================
 // TELA: CADASTRO (cadastro de novos usuários, só para admin)
 // Envia usuário, e-mail e senha para o backend Flask criar a conta.
-// ============================================================
+// ===============================================
 
 // Componentes básicos do React Native
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
@@ -31,19 +31,19 @@ export default function Cadastro() {
         Montserrat_700Bold
     });
 
-    // ---------- Campos do formulário ----------
+    // ---- Campos do formulário ----
     const [usuario, setUsuario] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     
-    // ---------- Controle de foco dos campos ----------
+    // ---- Controle de foco dos campos ----
     // true quando o usuário está com o cursor naquele campo.
     // Serve para mudar a borda do campo (destaque azul) enquanto digita
     const [usuarioFocus, setUsuarioFocus] = useState(false);
     const [emailFocus, setEmailFocus] = useState(false);
     const [senhaFocus, setSenhaFocus] = useState(false);
 
-    // ---------- Dados do usuário logado (exibidos na sidebar) ----------
+    // ---- Dados do usuário logado (exibidos na sidebar) ----
     const [nomeUsuario, setNomeUsuario] = useState('');
     const [tipoUsuario, setTipoUsuario] = useState(''); // 'admin' ou usuário comum
 
@@ -65,7 +65,7 @@ export default function Cadastro() {
       }, []) // [] = a função só é criada uma vez
     );
 
-    // ---------- CADASTRAR USUÁRIO ----------
+    // ---- CADASTRAR USUÁRIO ----
     // Valida os campos e envia os dados para o servidor
     const cadastrarUsuario = async () => {
     // try/catch captura erros (ex.: servidor desligado)
@@ -131,9 +131,9 @@ export default function Cadastro() {
   // Aqui foi usado "var"; o padrão atual é "const", como nos outros estados
   var [menuAberto, setMenuAberto] = useState(false);
 
-  // ============================================================
+  // ===============================================
   // INTERFACE (JSX): o que aparece na tela
-  // ============================================================
+  // ===============================================
   return (
     <View style={styles.background}>
 
@@ -296,11 +296,11 @@ export default function Cadastro() {
         );
         }
 
-// ============================================================
+// ================================================
 // ESTILOS
 // StyleSheet.create organiza os estilos em um objeto.
 // Cores principais: azul #1D3273 e laranja #F28705
-// ============================================================
+// ================================================
 const styles = StyleSheet.create({
 
     // Container principal: flex 1 ocupa a tela toda, com fundo cinza claro
