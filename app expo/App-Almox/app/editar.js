@@ -73,7 +73,7 @@ export default function Editar() {
   // Indica se o envio está em andamento (desabilita o botão e muda o texto)
   const [carregando, setCarregando] = useState(false);
 
-  // ---------- Escolher imagem da galeria ----------
+  // ---- Escolher imagem da galeria ----
   // Pede permissão de acesso às fotos e abre a galeria
   const escolherImagem = async () => {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
