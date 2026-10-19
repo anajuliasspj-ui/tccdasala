@@ -1,14 +1,28 @@
+// ============================================================
+// TELA: LOGIN (primeira tela do app)
+// O usuário digita e-mail e senha, o app envia para o backend Flask
+// e, se estiver correto, guarda os dados do usuário no celular
+// e vai para a tela de estoque.
+// ============================================================
+
+// Componentes básicos do React Native
 import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity } from 'react-native';
+// Fontes personalizadas (Inter, Montserrat e Poppins)
 import { useFonts, Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import { Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Poppins_700Bold } from '@expo-google-fonts/poppins';
+// LinearGradient cria um degradê de cores (usado por cima da imagem de fundo)
 import { LinearGradient } from 'expo-linear-gradient';
+// Armazenamento local do celular (aqui é usado para GRAVAR os dados do login)
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// Hook do React: useState guarda valores que mudam
 import { useState } from 'react';
+// router navega entre telas
 import { router } from 'expo-router';
 
 export default function Login() {
 
+  // Carrega as fontes. fontsLoaded fica true quando terminam de carregar
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_700Bold,
@@ -17,60 +31,94 @@ export default function Login() {
     Poppins_700Bold,
   });
 
+  // ---------- Campos do formulário ----------
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
+  // ---------- Controle de foco dos campos ----------
+  // true quando o usuário está com o cursor naquele campo.
+  // Serve para destacar a borda do campo enquanto ele digita
   const [emailFocus, setEmailFocus] = useState(false);
   const [senhaFocus, setSenhaFocus] = useState(false);
 
+  // ---------- FAZER LOGIN ----------
+  // Envia e-mail e senha para o servidor e trata a resposta
   const fazerLogin = async () => {
+  // try/catch captura erros (ex.: servidor desligado)
   try {
+    // Requisição POST para o backend (o IP precisa ser o do computador que roda o Flask,
+    // e o celular precisa estar na mesma rede Wi-Fi)
     const resposta = await fetch('http://10.154.20.25:5000/login_app', {
-      method: 'POST',
+      method: 'POST', // POST = enviar dados
       headers: {
+        // Avisa ao servidor que o corpo da requisição está em formato JSON
         'Content-Type': 'application/json',
       },
+      // JSON.stringify transforma o objeto JavaScript em texto JSON.
+      // As chaves (email, senha) devem bater com o que o Flask espera
       body: JSON.stringify({
         email: email,
         senha: senha,
       }),
     });
 
+    // Lê a resposta do servidor em JSON
     const dados = await resposta.json();
 
+    // Logs para depuração (aparecem no terminal do Expo)
     console.log('STATUS:', resposta.status);
     console.log('RESPOSTA DO SERVIDOR:', dados);
 
+    // resposta.ok é false quando o status não é 200-299 (ex.: 401 = não autorizado).
+    // Mostra a mensagem do servidor, ou uma mensagem padrão, e interrompe
     if (!resposta.ok) {
       alert(dados.mensagem || 'Email ou senha incorretos');
       return;
     }
 
+    // Login correto: grava os dados do usuário no celular.
+    // As outras telas (estoque, editar, contas, cadastro) leem esses valores
+    // com AsyncStorage.getItem para mostrar o nome na sidebar
+    // e decidir se exibem os links de admin
     await AsyncStorage.setItem('tipoUsuario', dados.tipo);
     await AsyncStorage.setItem('nomeUsuario', dados.usuario);
     await AsyncStorage.setItem('emailUsuario', dados.email);
 
+    // Vai para a tela de estoque (replace não deixa voltar para o login com o botão "voltar")
     router.replace('/tabela');
 
   } catch (erro) {
+    // Cai aqui em erro de rede (servidor desligado, IP errado, sem Wi-Fi etc.)
     console.log(erro);
     alert('Não foi possível conectar ao servidor');
   }
 };
 
+  // Enquanto as fontes não carregam, não desenha nada (evita a tela "piscar").
+  // Retornar null significa "não renderizar nada"
   if (!fontsLoaded) {
     return null;
   }
 
+  // ============================================================
+  // INTERFACE (JSX): o que aparece na tela
+  // ============================================================
   return (
     <View style={styles.container}>
 
+      {/* IMAGEM DE FUNDO: ocupa a tela toda (position absolute no estilo).
+          require carrega uma imagem que está dentro do projeto.
+          resizeMode "cover" preenche a área cortando o excesso, sem distorcer */}
       <Image
         source={require('../assets/industria.png')}
         style={styles.background}
         resizeMode="cover"
       />
 
+      {/* DEGRADÊ por cima da imagem: de azul quase transparente (topo)
+          para azul quase opaco (embaixo). Isso escurece a imagem e dá
+          contraste para os textos.
+          start e end definem a direção: x 0 → 0 e y 0 → 1 = de cima para baixo */}
       <LinearGradient
         colors={[
           'rgba(29, 50, 115, 0.25)',
@@ -81,8 +129,10 @@ export default function Login() {
         style={styles.gradient}
       />
 
+      {/* CONTEÚDO: textos de boas-vindas e o formulário, por cima do fundo */}
       <View style={styles.content}>
 
+        {/* Textos de boas-vindas */}
         <Text style={styles.paragraph1}>
           BOAS-VINDAS
         </Text>
@@ -91,13 +141,19 @@ export default function Login() {
           AO SENAI ALMOXARIFADO
         </Text>
 
+        {/* CARD BRANCO com o formulário de login */}
         <View style={styles.inputContainer}>
 
+          {/* Logo da FIEP no topo do card */}
           <Image
             source={require('../assets/fiep.png')}
             style={styles.logo}
           />
 
+          {/* E-MAIL.
+              value mostra o estado; onChangeText atualiza o estado a cada letra digitada.
+              onFocus/onBlur ligam e desligam o destaque da borda.
+              O estilo é um array: aplica input sempre e inputFocus só quando o campo está focado */}
           <Text style={styles.email}>
             Email
           </Text>
@@ -111,10 +167,11 @@ export default function Login() {
             placeholderTextColor="#888"
             value={email}
             onChangeText={setEmail}
-            onFocus={() => setEmailFocus(true)}
-            onBlur={() => setEmailFocus(false)}
+            onFocus={() => setEmailFocus(true)}   // ganhou foco: ativa o destaque
+            onBlur={() => setEmailFocus(false)}   // perdeu foco: desativa o destaque
           />
 
+          {/* SENHA */}
           <Text style={styles.senha}>
             Senha
           </Text>
@@ -132,6 +189,7 @@ export default function Login() {
             onBlur={() => setSenhaFocus(false)}
           />
 
+          {/* BOTÃO ENTRAR: chama fazerLogin ao ser pressionado */}
           <TouchableOpacity
             style={styles.button}
             onPress={fazerLogin}
@@ -149,128 +207,7 @@ export default function Login() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-
-  background: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-  },
-
-  gradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-
-  content: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: 100,
-    paddingBottom: 60,
-  },
-
-  paragraph1: {
-    width: '90%',
-    fontSize: 23,
-    fontFamily: 'Montserrat_400Regular',
-    color: '#F0F1F2',
-    textAlign: 'left',
-    marginBottom: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 3, height: 3 },
-    textShadowRadius: 0,
-  },
-
-  paragraph2: {
-    width: '90%',
-    fontSize: 25,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#F0F1F2',
-    textAlign: 'left',
-    marginBottom: 30,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 3, height: 3 },
-    textShadowRadius: 0,
-  },
-
-  inputContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    width: '90%',
-    maxWidth: 350,
-    minHeight: 435,
-    marginTop: 50,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-  },
-
-  logo: {
-    width: '100%',
-    height: 110,
-    resizeMode: 'contain',
-    marginBottom: 20,
-    alignSelf: 'center',
-  },
-
-  email: {
-    color: '#1f1f1f',
-    width: '90%',
-    fontSize: 20,
-    lineHeight: 25,
-    fontFamily: 'Poppins_700Bold',
-    marginBottom: 8,
-    alignSelf: 'center',
-  },
-
-  senha: {
-    color: '#1f1f1f',
-    width: '90%',
-    fontSize: 20,
-    lineHeight: 25,
-    fontFamily: 'Poppins_700Bold',
-    marginBottom: 8,
-    alignSelf: 'center',
-  },
-
-  input: {
-    width: '90%',
-    height: 50,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D4D4D4',
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    alignSelf: 'center',
-    outlineStyle: 'none',
-  },
-
-  inputFocus: {
-    borderColor: '#1D3273',
-    borderWidth: 2,
-  },
-
-  button: {
-    width: '90%',
-    height: 50,
-    backgroundColor: '#1D3273',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginTop: 10,
-  },
-
-  buttonText: {
-    fontFamily: 'Montserrat_700Bold',
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-});
+// ============================================================
+// ESTILOS
+// StyleSheet.create organiza os estilos em um objeto.
+//
