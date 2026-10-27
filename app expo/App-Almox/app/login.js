@@ -1,9 +1,7 @@
-// ============================================================
 // TELA: LOGIN (primeira tela do app)
 // O usuário digita e-mail e senha, o app envia para o backend Flask
 // e, se estiver correto, guarda os dados do usuário no celular
 // e vai para a tela de estoque.
-// ============================================================
 
 // Componentes básicos do React Native
 import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity } from 'react-native';
@@ -31,17 +29,17 @@ export default function Login() {
     Poppins_700Bold,
   });
 
-  // ---------- Campos do formulário ----------
+  // Campos do formulário
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  // ---------- Controle de foco dos campos ----------
+  // Controle de foco dos campos 
   // true quando o usuário está com o cursor naquele campo.
   // Serve para destacar a borda do campo enquanto ele digita
   const [emailFocus, setEmailFocus] = useState(false);
   const [senhaFocus, setSenhaFocus] = useState(false);
 
-  // ---------- FAZER LOGIN ----------
+  // FAZER LOGIN 
   // Envia e-mail e senha para o servidor e trata a resposta
   const fazerLogin = async () => {
   // try/catch captura erros (ex.: servidor desligado)
@@ -100,9 +98,8 @@ export default function Login() {
     return null;
   }
 
-  // ============================================================
+
   // INTERFACE (JSX): o que aparece na tela
-  // ============================================================
   return (
     <View style={styles.container}>
 
@@ -206,8 +203,6 @@ export default function Login() {
     </View>
   );
 }
-
-// ============================================================
 // ESTILOS
 // StyleSheet.create organiza os estilos em um objeto.
-//
+

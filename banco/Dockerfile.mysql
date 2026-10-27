@@ -1,7 +1,20 @@
+# Imagem base: MySQL oficial do Docker Hub.
+# "latest" sempre puxa a versão mais recente; para evitar surpresas em
+# atualizações, considere fixar uma versão (ex.: mysql:8.0).
 FROM mysql:latest
 
+# Permite que o usuário root do MySQL tenha senha vazia.
+# Prático para desenvolvimento/TCC, mas NÃO use em produção:
+# qualquer pessoa com acesso à porta consegue entrar no banco.
 ENV MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
+# Copia o script SQL para a pasta de inicialização da imagem.
+# Todo arquivo .sql nessa pasta é executado automaticamente
+# na PRIMEIRA vez que o container sobe (quando o banco ainda está vazio),
+# criando as tabelas e dados do Almoxarifado.
 COPY Almoxarifado.sql /docker-entrypoint-initdb.d/
 
+# Documenta que o container usa a porta 3306 (porta padrão do MySQL).
+# Observação: o EXPOSE é só informativo; para acessar de fora do Docker,
+# é preciso mapear a porta ao rodar, ex.: docker run -p 3306:3306 ...
 EXPOSE 3306

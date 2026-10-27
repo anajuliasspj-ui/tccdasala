@@ -23,9 +23,9 @@ app = Flask(__name__)
 app.secret_key = "brasil"
 
 
-# ==============================
+
 # SENHAS (BCRYPT)
-# ==============================
+
 
 # GERAR SENHA BCRYPT
 # Recebe a senha em texto e devolve o hash que será salvo no banco
@@ -49,9 +49,9 @@ def verificar_senha(senha_digitada, hash_armazenado):
     # checkpw refaz o cálculo e compara com o hash armazenado
     return bcrypt.checkpw(senha_bytes, hash_bytes)
 
-# ================================
+
 # CONEXÃO COM O BANCO
-# ================================
+
 
 # CONEXÃO
 # Cada vez que é chamada, abre uma nova conexão com o MySQL.
@@ -66,9 +66,9 @@ def get_db():
         charset='utf8mb4', # aceita acentos e emojis
     )
 
-# ==============================
+
 # AUTORIZAÇÃO (usada nas rotas do SITE)
-# ==============================
+
 # True se o usuário já fez login (existe 'usuario' na sessão)
 def login_required():
     return 'usuario' in session
@@ -77,9 +77,9 @@ def login_required():
 def admin_required():
     return session.get('tipo') == 'admin'
 
-# =====================================
+
 # ROTAS DO SITE
-# =====================================
+
 # HOME
 # Página inicial do site
 @app.route('/')
@@ -126,9 +126,9 @@ def login():
 def login_erro():
     return render_template('login_erro.html')
 
-# ================================
+
 # LOGIN DO APLICATIVO (devolve JSON, não usa sessão)
-# ================================
+
 
 # LOGIN DO APLICATIVO
 @app.route('/login_app', methods=['POST'])
@@ -220,9 +220,8 @@ def tabela():
     # Manda a lista para o HTML, que monta a tabela
     return render_template('tabela.html', resultado=resultado)
 
-# =================================
 # ENTRADA / SAÍDA DE ESTOQUE (versão do SITE)
-# =================================
+
 # ENTRADA / SAÍDA ESTOQUE
 
 @app.route('/entrada', methods=['POST'])
@@ -409,11 +408,11 @@ def entrada():
 
     return jsonify({"success": True}), 200
 
-# ============================================================
+
 # ENTRADA / SAÍDA DO APLICATIVO
 # É a rota que a tela Editar do app chama (/entrada_app).
 # Faz o mesmo que /entrada, mas com mais validações e tratamento de erros
-# ============================================================
+
 
 # ENTRADA DO APLICATIVO
 @app.route('/entrada_app', methods=['POST'])
@@ -676,10 +675,7 @@ def entrada_app():
         if conexao:
             conexao.close()
 
-# ============================================================
 # TABELA DO APLICATIVO (a tela Estoque do app chama esta rota)
-# ============================================================
-
 # TABELA DO APLICATIVO
 @app.route('/tabela_app', methods=['GET'])
 def tabela_app():

@@ -1,7 +1,6 @@
-// ===============================================
 // TELA: CADASTRO (cadastro de novos usuários, só para admin)
 // Envia usuário, e-mail e senha para o backend Flask criar a conta.
-// ===============================================
+
 
 // Componentes básicos do React Native
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
@@ -31,12 +30,12 @@ export default function Cadastro() {
         Montserrat_700Bold
     });
 
-    // ---- Campos do formulário ----
+    // Campos do formulário 
     const [usuario, setUsuario] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     
-    // ---- Controle de foco dos campos ----
+    //  Controle de foco dos campos 
     // true quando o usuário está com o cursor naquele campo.
     // Serve para mudar a borda do campo (destaque azul) enquanto digita
     const [usuarioFocus, setUsuarioFocus] = useState(false);

@@ -1,8 +1,7 @@
-// ============================================================
 // TELA: CONTAS (gerenciador de contas, só para admin)
 // Lista os usuários cadastrados no banco, mostra detalhes
 // (e-mail e tipo) e permite excluir um usuário.
-// ============================================================
+
 
 // Componentes básicos do React Native.
 // FlatList renderiza listas grandes de forma eficiente (só desenha o que aparece na tela)
@@ -28,7 +27,7 @@ export default function Usuarios() {
     Montserrat_400Regular,
   });
 
-  // ---------- Estados da tela ----------
+  // Estados da tela 
   // Guarda o ID do usuário cujos detalhes estão abertos (null = nenhum aberto)
   const [produtoAberto, setProdutoAberto] = useState(null);
   // Controla se a sidebar está aberta (true) ou fechada (false)
@@ -42,7 +41,7 @@ export default function Usuarios() {
   // Descobre em qual tela estamos (ex.: '/contas', '/tabela')
   const pathname = usePathname();
 
-  // ---------- BUSCAR USUÁRIOS DO BANCO ----------
+  //  BUSCAR USUÁRIOS DO BANCO 
   // useEffect roda quando a tela abre e sempre que o valor em [pathname] mudar
   useEffect(() => {
 
@@ -87,7 +86,7 @@ export default function Usuarios() {
 
   }, [pathname]); // [pathname] = refaz a busca sempre que a tela mudar
 
-  // ---------- EXCLUIR USUÁRIO ----------
+  //  EXCLUIR USUÁRIO 
   // Recebe o id do usuário e pede confirmação antes de apagar
   const excluirUser = (id) => {
     // Alert.alert aceita um terceiro parâmetro: a lista de botões do alerta
@@ -136,7 +135,7 @@ export default function Usuarios() {
     );
   };
 
-  // ---------- CARREGAR USUÁRIO LOGADO ----------
+  //  CARREGAR USUÁRIO LOGADO 
   // Com [] no final, este efeito roda uma única vez, quando a tela é criada
   useEffect(() => {
 
@@ -164,9 +163,8 @@ export default function Usuarios() {
   }
 
 
-  // ============================================================
   // INTERFACE (JSX): o que aparece na tela
-  // ============================================================
+
   return (
     <View style={styles.background}>
 
@@ -418,11 +416,11 @@ export default function Usuarios() {
   );
 }
 
-// ============================================================
+
 // ESTILOS
 // StyleSheet.create organiza os estilos em um objeto.
 // Cores principais: azul #1D3273 e laranja #F28705
-// ============================================================
+
 const styles = StyleSheet.create({
   // Container principal: flex 1 ocupa a tela toda, com fundo cinza claro
   background: {

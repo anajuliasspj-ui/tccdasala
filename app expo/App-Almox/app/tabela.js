@@ -1,9 +1,8 @@
-// ============================================================
 // TELA: TABELA (estoque do almoxarifado)
 // Lista os produtos cadastrados no banco, mostra detalhes
 // (categoria, quantidade, preço, descrição, imagem) e permite
 // excluir um produto.
-// ============================================================
+
 
 // Componentes básicos do React Native.
 // FlatList renderiza listas grandes de forma eficiente (só desenha o que aparece na tela).
@@ -29,7 +28,7 @@ export default function Tabela() {
     Montserrat_400Regular,
   });
 
-  // ---------- Estados da tela ----------
+  // Estados da tela 
   // Guarda o ID do produto cujos detalhes estão abertos (null = nenhum aberto)
   const [produtoAberto, setProdutoAberto] = useState(null);
   // Controla se a sidebar está aberta (true) ou fechada (false)
@@ -42,7 +41,7 @@ export default function Tabela() {
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState(''); // 'admin' ou usuário comum
 
-  // ---------- CARREGAR USUÁRIO LOGADO ----------
+  //  CARREGAR USUÁRIO LOGADO 
   // Toda vez que a tela ganha foco, busca os dados do usuário salvos no celular.
   // useCallback evita recriar a função a cada renderização.
   useFocusEffect(
@@ -61,7 +60,7 @@ export default function Tabela() {
     }, []) // [] = a função só é criada uma vez
   );
 
-  // ---------- BUSCAR PRODUTOS DO BANCO ----------
+  // BUSCAR PRODUTOS DO BANCO 
   // Também roda toda vez que a tela ganha foco. Assim, ao voltar da tela Editar
   // (depois de uma entrada/saída), a tabela já aparece atualizada
   useFocusEffect(
@@ -106,7 +105,7 @@ export default function Tabela() {
   }, [])
 );
 
-// ---------- EXCLUIR ITEM ----------
+//  EXCLUIR ITEM 
 // Recebe o id do produto e pede confirmação antes de apagar
 const excluirItem = (id) => {
   // Alert.alert aceita um terceiro parâmetro: a lista de botões do alerta
@@ -155,9 +154,9 @@ const excluirItem = (id) => {
   );
 };
 
-  // ============================================================
+
   // INTERFACE (JSX): o que aparece na tela
-  // ============================================================
+
   return (
     <View style={styles.background}>
 
@@ -418,11 +417,11 @@ const excluirItem = (id) => {
   );
 }
 
-// ============================================================
+
 // ESTILOS
 // StyleSheet.create organiza os estilos em um objeto.
 // Cores principais: azul #1D3273 e laranja #F28705
-// ============================================================
+
 const styles = StyleSheet.create({
   // Container principal: flex 1 ocupa a tela toda, com fundo cinza claro
   background: {

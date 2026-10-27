@@ -1,8 +1,7 @@
-// ===============================================
 // TELA: EDITAR (entrada e saída de produtos do almoxarifado)
 // Permite registrar a entrada ou saída de um produto, enviando
 // os dados (e opcionalmente uma imagem) para o backend Flask.
-// ===============================================
+
 
 // Componentes básicos do React Native
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, FlatList, Modal, Alert, ScrollView} from 'react-native';
@@ -37,7 +36,7 @@ export default function Editar() {
   // Tipo da operação: 'entrada' ou 'saida'
   const [tipo, setTipo] = useState('entrada');
 
-  // ---------- Campos do formulário do produto ----------
+  // Campos do formulário do produto 
   // Cada campo tem um estado: o valor atual e a função que o altera
   const [nome, setNome] = useState('');
   const [responsavel, setResponsavel] = useState('');
@@ -48,7 +47,7 @@ export default function Editar() {
   const [estoqueMin, setEstoqueMin] = useState('');
   const [imagem, setImagem] = useState(null); // imagem escolhida (null = nenhuma)
 
-  // ---------- Dados do usuário logado ----------
+  //  Dados do usuário logado 
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState(''); // 'admin' ou usuário comum
   
@@ -73,7 +72,7 @@ export default function Editar() {
   // Indica se o envio está em andamento (desabilita o botão e muda o texto)
   const [carregando, setCarregando] = useState(false);
 
-  // ---- Escolher imagem da galeria ----
+  //  Escolher imagem da galeria 
   // Pede permissão de acesso às fotos e abre a galeria
   const escolherImagem = async () => {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -100,7 +99,7 @@ export default function Editar() {
   }
 };
 
-  // ---------- CONFIRMAR OPERAÇÃO ----------
+  //CONFIRMAR OPERAÇÃO
   // Valida os campos e envia os dados para o servidor
   const confirmarOperacao = async () => {
 
@@ -231,9 +230,9 @@ export default function Editar() {
       }
 };
 
-  // ===============================================
+
   // INTERFACE (JSX): o que aparece na tela
-  // ===============================================
+  
   return (
     <View style={styles.container}>
 
@@ -556,11 +555,10 @@ export default function Editar() {
 }
 
 
-// ===============================================
+
 // ESTILOS
 // StyleSheet.create organiza os estilos em um objeto.
 // Cores principais: azul #1D3273 e laranja #F28705
-// ===============================================
 const styles = StyleSheet.create({
   // Container principal: flex 1 ocupa a tela toda, com fundo cinza claro
   container: {
